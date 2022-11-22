@@ -1,0 +1,57 @@
+name: Build Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    name: ${{ matrix.asset_name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        include:
+
+          - os: ubuntu-latest
+            artifact_name: xyz
+            asset_name: xyz-linux-amd64
+            cmd: GOOS=linux GOARCH=amd64 go build -o xyz ./...
+
+          - os: ubuntu-latest
+            artifact_name: xyz
+            asset_name: xyz-linux-386
+            cmd: GOOS=linux GOARCH=386 go build -o xyz ./...
+
+          - os: windows-latest
+            artifact_name: xyz
+            asset_name: xyz-windows-amd64.exe
+            cmd: set GOOS=windows && set GOARCH=amd54 && go build -o xyz ./...
+          
+          - os: windows-latest
+            artifact_name: xyz
+            asset_name: xyz-windows-386.exe
+            cmd: set GOOS=windows && set GOARCH=386 && go build -o xyz ./...
+
+          - os: macos-latest
+            artifact_name: xyz
+            asset_name: xyz-darwin-amd64
+            cmd: GOOS=darwin GOARCH=amd64 go build -o xyz ./...
+    
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+            
+      - name: Build
+        run: ${{ matrix.cmd }}
+
+      - name: Upload 
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
